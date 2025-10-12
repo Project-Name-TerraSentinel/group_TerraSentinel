@@ -1,22 +1,24 @@
 from flask import Flask, request, jsonify
 import onnxruntime as ort
 import numpy as np
+import os
 
 app = Flask(__name__)
 
-# Load the ONNX model once
-session = ort.InferenceSession("terra_pulse_model.onnx")
+# Load ONNX model safely using absolute path
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "terra_pulse_model.onnx")
+session = ort.InferenceSession(MODEL_PATH)
 
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
         data = request.get_json()
 
-        # Extract metadata fields (location, user_context) if provided
+        # Extract metadata
         location = data.get("location", "Unknown location")
         user_context = data.get("user_context", "General user")
 
-        # Extract NDVI-related features
+        # Extract numeric features (7 NDVI columns)
         features = np.array([[
             data["NDVI_mean_early"],
             data["NDVI_median_early"],
@@ -27,17 +29,16 @@ def predict():
             data["NDVI_delta_mean"]
         ]], dtype=np.float32)
 
-        # Run ONNX inference
+        # Run ONNX prediction
         inputs = {session.get_inputs()[0].name: features}
         outputs = session.run(None, inputs)
         prediction = float(outputs[0][0])
 
-        # 🌿 Derive interpretive metrics from prediction
-        # You can adjust these to match your model scale
-        degradation_risk = int(prediction * 100) if prediction <= 1 else int(prediction)
-        confidence = round(min(1.0, abs(prediction) / 1.0), 2)
+        # Convert model output to percentage / confidence
+        degradation_risk = int(min(100, prediction * 100))
+        confidence = round(min(1.0, abs(prediction)), 2)
 
-        # Risk factors and recommendation logic
+        # Determine risk factors & recommended action
         if degradation_risk > 70:
             risk_factors = ["bare_soil_increase", "low_ndvi"]
             recommended_action_key = "mulch_crop_residue"
@@ -48,7 +49,7 @@ def predict():
             risk_factors = ["healthy_ndvi"]
             recommended_action_key = "maintain_current_practices"
 
-        # Combine everything into a structured output
+        # Build final JSON output
         ml_output = {
             "location": location,
             "degradation_risk": degradation_risk,
@@ -58,12 +59,10 @@ def predict():
             "user_context": user_context
         }
 
-        output = {"ml_output": ml_output}
-        return jsonify(output)
+        return jsonify({"ml_output": ml_output})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
