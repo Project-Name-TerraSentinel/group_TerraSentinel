@@ -2,12 +2,22 @@ from flask import Flask, request, jsonify
 import onnxruntime as ort
 import numpy as np
 import os
+import sys
 
 app = Flask(__name__)
 
 # Load ONNX model safely using absolute path
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "terra_pulse_model.onnx")
-session = ort.InferenceSession(MODEL_PATH)
+
+if not os.path.exists(MODEL_PATH):
+    print(f"ERROR: ONNX model not found at {MODEL_PATH}", file=sys.stderr)
+    sys.exit(1)  # Exit immediately if the model is missing
+
+try:
+    session = ort.InferenceSession(MODEL_PATH)
+except Exception as e:
+    print(f"ERROR: Failed to load ONNX model: {e}", file=sys.stderr)
+    sys.exit(1)
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -19,7 +29,7 @@ def predict():
         user_context = data.get("user_context", "General user")
 
         # Extract numeric features (7 NDVI columns)
-        features = np.array([[
+        features = np.array([[ 
             data["NDVI_mean_early"],
             data["NDVI_median_early"],
             data["NDVI_std_early"],
@@ -65,4 +75,5 @@ def predict():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
+    # Debug=True for local testing, False for production on Render
     app.run(debug=True, host="0.0.0.0", port=5000)
