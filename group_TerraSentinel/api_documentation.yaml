@@ -1,0 +1,701 @@
+openapi: 3.0.3
+info:
+  title: Terra Pulse Enhanced API
+  description: |
+    AI-enhanced soil degradation prediction service that integrates Terra Pulse machine learning models with Dify AI workflows.
+    
+    ## Features
+    - **Basic Predictions**: ONNX-based soil degradation risk assessment
+    - **Enhanced Predictions**: AI-powered insights and recommendations via Dify integration
+    - **User-Specific Formatting**: Tailored responses for farmers vs. officials
+    - **Caching**: Redis-based caching for improved performance
+    - **Health Monitoring**: Comprehensive service health checks
+    - **Rate Limiting**: API key-based rate limiting
+    - **Security**: Input validation, sanitization, and HTTPS enforcement
+    
+    ## Authentication
+    All prediction endpoints require an API key passed in the `X-API-Key` header.
+    
+    ## Rate Limiting
+    - Default: 60 requests per minute per API key
+    - Configurable via environment variables
+    - Uses Redis for distributed rate limiting
+    
+    ## Error Handling
+    The API uses structured error responses with consistent error codes and user-friendly messages.
+    
+  version: 2.0.0
+  contact:
+    name: Terra Pulse API Support
+    email: support@terrapulse.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://terra-pulse-api.onrender.com
+    description: Production server
+  - url: http://localhost:5000
+    description: Local development server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /:
+    get:
+      summary: API Documentation
+      description: Returns API information and available endpoints
+      tags:
+        - Documentation
+      security: []
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiInfo'
+
+  /predict:
+    post:
+      summary: Basic Terra Pulse Prediction
+      description: |
+        Performs soil degradation risk assessment using the Terra Pulse ONNX model.
+        Returns basic prediction results with risk factors and recommended actions.
+      tags:
+        - Predictions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicPredictionRequest'
+            examples:
+              farmer_request:
+                summary: Farmer prediction request
+                value:
+                  NDVI_mean_early: 0.45
+                  NDVI_median_early: 0.43
+                  NDVI_std_early: 0.12
+                  NDVI_mean_late: 0.38
+                  NDVI_median_late: 0.36
+                  NDVI_std_late: 0.15
+                  NDVI_delta_mean: -0.07
+                  location: "Baringo County, Kenya"
+                  user_context: "smallholder_farmer"
+      responses:
+        '200':
+          description: Successful prediction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicPredictionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /enhanced-predict:
+    post:
+      summary: Enhanced AI-Powered Prediction
+      description: |
+        Performs enhanced soil degradation prediction by combining Terra Pulse model results
+        with AI-generated insights from Dify workflows. Provides user-specific formatting
+        and comprehensive recommendations.
+      tags:
+        - Predictions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnhancedPredictionRequest'
+            examples:
+              farmer_request:
+                summary: Farmer enhanced prediction
+                value:
+                  NDVI_mean_early: 0.45
+                  NDVI_median_early: 0.43
+                  NDVI_std_early: 0.12
+                  NDVI_mean_late: 0.38
+                  NDVI_median_late: 0.36
+                  NDVI_std_late: 0.15
+                  NDVI_delta_mean: -0.07
+                  location: "Baringo County, Kenya"
+                  user_context: "smallholder_farmer"
+                  user_type: "farmer"
+              official_request:
+                summary: Official enhanced prediction
+                value:
+                  NDVI_mean_early: 0.52
+                  NDVI_median_early: 0.50
+                  NDVI_std_early: 0.08
+                  NDVI_mean_late: 0.41
+                  NDVI_median_late: 0.39
+                  NDVI_std_late: 0.11
+                  NDVI_delta_mean: -0.11
+                  location: "Turkana County, Kenya"
+                  user_context: "government_official"
+                  user_type: "official"
+      responses:
+        '200':
+          description: Successful enhanced prediction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhancedPredictionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /health/system:
+    get:
+      summary: System Health Check
+      description: Returns overall system health status including all services
+      tags:
+        - Health
+      security: []
+      responses:
+        '200':
+          description: System health information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHealthResponse'
+        '503':
+          description: System unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHealthResponse'
+
+  /health/terra-pulse:
+    get:
+      summary: Terra Pulse Service Health
+      description: Returns Terra Pulse model service health status
+      tags:
+        - Health
+      security: []
+      responses:
+        '200':
+          description: Terra Pulse service health
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceHealthResponse'
+        '503':
+          description: Service unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceHealthResponse'
+
+  /health/dify:
+    get:
+      summary: Dify Service Health
+      description: Returns Dify AI service health status
+      tags:
+        - Health
+      security: []
+      responses:
+        '200':
+          description: Dify service health
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DifyHealthResponse'
+        '503':
+          description: Service unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DifyHealthResponse'
+
+  /metrics:
+    get:
+      summary: Prometheus Metrics
+      description: Returns Prometheus-compatible metrics for monitoring
+      tags:
+        - Monitoring
+      security: []
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP terra_pulse_service_health Terra Pulse service health status
+                  # TYPE terra_pulse_service_health gauge
+                  terra_pulse_service_health 1
+                  
+                  # HELP dify_service_health Dify service health status
+                  # TYPE dify_service_health gauge
+                  dify_service_health 1
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  schemas:
+    BasicPredictionRequest:
+      type: object
+      required:
+        - NDVI_mean_early
+        - NDVI_median_early
+        - NDVI_std_early
+        - NDVI_mean_late
+        - NDVI_median_late
+        - NDVI_std_late
+        - NDVI_delta_mean
+      properties:
+        NDVI_mean_early:
+          type: number
+          format: float
+          minimum: -1.0
+          maximum: 1.0
+          description: Mean NDVI value for early season
+          example: 0.45
+        NDVI_median_early:
+          type: number
+          format: float
+          minimum: -1.0
+          maximum: 1.0
+          description: Median NDVI value for early season
+          example: 0.43
+        NDVI_std_early:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Standard deviation of NDVI for early season
+          example: 0.12
+        NDVI_mean_late:
+          type: number
+          format: float
+          minimum: -1.0
+          maximum: 1.0
+          description: Mean NDVI value for late season
+          example: 0.38
+        NDVI_median_late:
+          type: number
+          format: float
+          minimum: -1.0
+          maximum: 1.0
+          description: Median NDVI value for late season
+          example: 0.36
+        NDVI_std_late:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Standard deviation of NDVI for late season
+          example: 0.15
+        NDVI_delta_mean:
+          type: number
+          format: float
+          description: Change in mean NDVI between seasons
+          example: -0.07
+        location:
+          type: string
+          description: Geographic location of the prediction
+          example: "Baringo County, Kenya"
+        user_context:
+          type: string
+          description: Context about the user making the request
+          example: "smallholder_farmer"
+
+    EnhancedPredictionRequest:
+      allOf:
+        - $ref: '#/components/schemas/BasicPredictionRequest'
+        - type: object
+          required:
+            - user_type
+          properties:
+            user_type:
+              type: string
+              enum: [farmer, official]
+              description: Type of user for response formatting
+              example: "farmer"
+
+    BasicPredictionResponse:
+      type: object
+      properties:
+        ml_output:
+          type: object
+          properties:
+            location:
+              type: string
+              example: "Baringo County, Kenya"
+            degradation_risk:
+              type: integer
+              minimum: 0
+              maximum: 100
+              description: Soil degradation risk percentage
+              example: 75
+            risk_factors:
+              type: array
+              items:
+                type: string
+              description: Identified risk factors
+              example: ["bare_soil_increase", "low_ndvi"]
+            recommended_action_key:
+              type: string
+              description: Key for recommended action
+              example: "mulch_crop_residue"
+            confidence:
+              type: number
+              format: float
+              minimum: 0.0
+              maximum: 1.0
+              description: Prediction confidence score
+              example: 0.85
+            user_context:
+              type: string
+              example: "smallholder_farmer"
+
+    EnhancedPredictionResponse:
+      type: object
+      properties:
+        terra_pulse_prediction:
+          $ref: '#/components/schemas/BasicPredictionResponse/properties/ml_output'
+        ai_insights:
+          type: object
+          properties:
+            enhanced_recommendations:
+              type: array
+              items:
+                type: string
+              description: AI-generated recommendations
+              example: 
+                - "Apply crop residue mulch within 2 weeks"
+                - "Consider drought-resistant maize varieties"
+            risk_assessment:
+              type: string
+              description: AI risk assessment
+              example: "High degradation risk due to recent drought conditions"
+            timeline:
+              type: string
+              description: Recommended timeline for action
+              example: "Immediate action required within 14 days"
+            cost_estimate:
+              type: string
+              description: Estimated cost of recommendations
+              example: "Low cost - use existing crop residue"
+            success_probability:
+              type: number
+              format: float
+              minimum: 0.0
+              maximum: 1.0
+              description: Probability of success if recommendations followed
+              example: 0.78
+        formatted_response:
+          type: object
+          properties:
+            farmer_message:
+              type: string
+              description: User-friendly message for farmers
+              example: "Your field shows high erosion risk. Apply crop residue mulch this week to protect soil."
+            technical_details:
+              type: string
+              description: Technical details for officials
+              example: "NDVI decline of 15% indicates significant vegetation stress..."
+        metadata:
+          type: object
+          properties:
+            processing_time_ms:
+              type: number
+              description: Processing time in milliseconds
+              example: 1200
+            dify_workflow_id:
+              type: string
+              description: Dify workflow identifier
+              example: "workflow_123"
+            cache_hit:
+              type: boolean
+              description: Whether result was served from cache
+              example: false
+            timestamp:
+              type: string
+              format: date-time
+              description: Response timestamp
+              example: "2024-10-13T10:30:00Z"
+            dify_success:
+              type: boolean
+              description: Whether Dify processing succeeded
+              example: true
+            total_processing_time_ms:
+              type: number
+              description: Total processing time including all services
+              example: 1500
+
+    SystemHealthResponse:
+      type: object
+      properties:
+        system:
+          type: string
+          example: "terra_pulse_dify_integration"
+        overall_status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall system health status
+          example: "healthy"
+        services:
+          type: object
+          properties:
+            terra_pulse:
+              $ref: '#/components/schemas/ServiceStatus'
+            dify:
+              $ref: '#/components/schemas/ServiceStatus'
+            cache:
+              type: object
+              properties:
+                available:
+                  type: boolean
+                  example: true
+                hit_ratio:
+                  type: number
+                  format: float
+                  example: 0.85
+                total_keys:
+                  type: integer
+                  example: 1250
+        capabilities:
+          type: object
+          properties:
+            basic_predictions:
+              type: boolean
+              example: true
+            enhanced_predictions:
+              type: boolean
+              example: true
+            caching:
+              type: boolean
+              example: true
+        timestamp:
+          type: number
+          format: timestamp
+          example: 1697198400
+
+    ServiceHealthResponse:
+      type: object
+      properties:
+        service:
+          type: string
+          example: "terra_pulse"
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          example: "healthy"
+        message:
+          type: string
+          example: "Service is operating normally"
+        model_loaded:
+          type: boolean
+          description: Whether the ONNX model is loaded (Terra Pulse only)
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-10-13T10:30:00Z"
+        response_time_ms:
+          type: number
+          description: Health check response time
+          example: 45
+
+    DifyHealthResponse:
+      type: object
+      properties:
+        service:
+          type: string
+          example: "dify"
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          example: "healthy"
+        message:
+          type: string
+          example: "Service is operating normally"
+        api_accessible:
+          type: boolean
+          description: Whether Dify API is accessible
+          example: true
+        workflow_accessible:
+          type: boolean
+          description: Whether the configured workflow is accessible
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-10-13T10:30:00Z"
+        response_time_ms:
+          type: number
+          description: Health check response time
+          example: 120
+
+    ServiceStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          example: "healthy"
+        message:
+          type: string
+          example: "Service is operating normally"
+        response_time_ms:
+          type: number
+          example: 45
+
+    ApiInfo:
+      type: object
+      properties:
+        service:
+          type: string
+          example: "Terra Pulse Enhanced API"
+        version:
+          type: string
+          example: "2.0.0"
+        description:
+          type: string
+          example: "AI-enhanced soil degradation prediction service"
+        endpoints:
+          type: object
+          description: Available API endpoints
+        authentication:
+          type: object
+          properties:
+            header:
+              type: string
+              example: "X-API-Key"
+            description:
+              type: string
+              example: "API key required for prediction endpoints"
+        rate_limiting:
+          type: object
+          properties:
+            limit:
+              type: string
+              example: "60 requests per minute"
+            scope:
+              type: string
+              example: "per API key"
+        capabilities:
+          type: object
+          properties:
+            basic_predictions:
+              type: boolean
+              example: true
+            enhanced_ai_insights:
+              type: boolean
+              example: true
+            user_specific_formatting:
+              type: boolean
+              example: true
+            caching:
+              type: boolean
+              example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Request validation failed"
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-10-13T10:30:00Z"
+
+  responses:
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "VALIDATION_ERROR"
+            message: "Request validation failed"
+            details:
+              missing_fields: ["NDVI_mean_early"]
+            timestamp: "2024-10-13T10:30:00Z"
+
+    AuthenticationError:
+      description: Authentication failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INVALID_API_KEY"
+            message: "Invalid or missing API key"
+            details:
+              header_name: "X-API-Key"
+            timestamp: "2024-10-13T10:30:00Z"
+
+    RateLimitError:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds to wait before retrying
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "RATE_LIMIT_EXCEEDED"
+            message: "Rate limit exceeded"
+            details:
+              limit: 60
+              window: "minute"
+              retry_after: 60
+            timestamp: "2024-10-13T10:30:00Z"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INTERNAL_ERROR"
+            message: "An unexpected error occurred"
+            details:
+              error_type: "ModelPredictionException"
+            timestamp: "2024-10-13T10:30:00Z"
+
+tags:
+  - name: Documentation
+    description: API information and documentation
+  - name: Predictions
+    description: Soil degradation prediction endpoints
+  - name: Health
+    description: Service health monitoring
+  - name: Monitoring
+    description: System metrics and monitoring

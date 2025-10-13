@@ -1,0 +1,1 @@
+# Configuration package for Terra Pulse-Dify integration
