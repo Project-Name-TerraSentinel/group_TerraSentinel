@@ -1,0 +1,22 @@
+{
+  "predict": {
+    "status": 500,
+    "body": {
+      "details": {
+        "error_type": "RuntimeError"
+      },
+      "error": "INTERNAL_ERROR",
+      "message": "An unexpected error occurred"
+    }
+  },
+  "ai": {
+    "status": 500,
+    "body": {
+      "details": {
+        "error_type": "RuntimeError"
+      },
+      "error": "INTERNAL_ERROR",
+      "message": "An unexpected error occurred"
+    }
+  }
+}

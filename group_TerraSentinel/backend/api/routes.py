@@ -52,6 +52,23 @@ def create_routes(app: Flask, config: AppConfig) -> None:
     def enhanced_predict():
         """Enhanced prediction with Dify AI insights."""
         return prediction_handler.handle_enhanced_prediction(request)
+
+    @app.route('/ai', methods=['POST'])
+    @log_request
+    @rate_limit
+    @require_api_key
+    def ai_proxy():
+        """Simple AI proxy endpoint that forwards structured prompts to the Dify service via server-side credentials."""
+        try:
+            data = request.get_json()
+            if not data:
+                raise ValueError('No JSON payload provided')
+
+            # Handler will call DifyService through the service factory
+            return prediction_handler.handle_ai_proxy(request)
+        except Exception as e:
+            logger.exception('AI proxy error')
+            return jsonify({'error': 'AI_PROXY_ERROR', 'message': str(e)}), 500
     
     # Health check endpoints
     @app.route("/health/terra-pulse", methods=["GET"])
