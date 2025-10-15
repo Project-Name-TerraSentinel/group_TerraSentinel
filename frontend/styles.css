@@ -1,0 +1,190 @@
+/* TerraPulse Frontend Styles */
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.farmer-card {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.planner-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.risk-score {
+  font-size: 3rem;
+  font-weight: bold;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.risk-low { color: #10b981; }
+.risk-medium { color: #f59e0b; }
+.risk-high { color: #ef4444; }
+
+.action-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.map-container {
+  height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.mini-map {
+  height: 200px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-online { background: #10b981; }
+.status-offline { background: #ef4444; }
+.status-loading { background: #f59e0b; }
+
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-box {
+    width: 95%;
+    padding: 16px;
+  }
+  
+  .farmer-card {
+    padding: 16px;
+    margin: 10px;
+  }
+}
+
+/* Map popup styles */
+.leaflet-popup-content {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.popup-button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  margin: 2px;
+}
+
+.popup-button:hover {
+  background: #2563eb;
+}
+
+/* Priority colors for map */
+.priority-very-high { background: #dc2626; }
+.priority-high { background: #ea580c; }
+.priority-medium { background: #d97706; }
+.priority-low { background: #65a30d; }
+.priority-very-low { background: #16a34a; }

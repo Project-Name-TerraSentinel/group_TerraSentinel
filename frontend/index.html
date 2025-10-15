@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TerraPulse — Soil Degradation Analysis</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Leaflet CSS/JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <div id="app" class="min-h-screen flex items-start justify-center py-12 px-4"></div>
+
+  <!-- Auth modal -->
+  <div id="authModal" class="modal-backdrop" aria-hidden="true" style="display:none;">
+    <div class="modal-box">
+      <h3 id="authTitle" class="text-lg font-semibold mb-2">Sign in</h3>
+
+      <div id="signupFields" class="hidden">
+        <input id="nameInput" placeholder="Full name" class="w-full border p-2 rounded mb-2"/>
+      </div>
+
+      <input id="emailInput" placeholder="Email" type="email" class="w-full border p-2 rounded mb-2"/>
+      <input id="passwordInput" placeholder="Password" type="password" class="w-full border p-2 rounded mb-2"/>
+
+      <div id="roleWrapper" class="hidden">
+        <select id="roleSelect" class="w-full border p-2 rounded mb-2">
+          <option value="">Choose role...</option>
+          <option value="farmer">Farmer</option>
+          <option value="planner">Planner</option>
+        </select>
+        <input id="parcelInput" placeholder="Parcel ID (optional for farmer)" class="w-full border p-2 rounded mb-2 hidden"/>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button id="authCancel" class="py-2 px-3 rounded border">Cancel</button>
+        <button id="authSubmit" class="py-2 px-3 rounded bg-sky-600 text-white">Submit</button>
+      </div>
+      <div id="authMsg" class="text-sm text-red-600 mt-2"></div>
+    </div>
+  </div>
+
+  <!-- App modules -->
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
